@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+   <style>
+        body {
+            /* URL to the background image */
+            background-image: url('https://source.unsplash.com/random/1920x1080');
+            background-size: cover;
+            background-position: center;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="container max-w-md mx-auto p-8 bg-white shadow">
+        <h1 class="text-xl font-bold mb-4">Currency Converter</h1>
+        <form id="converterForm" class="space-y-4">
+            <div>
+                <label for="fromCurrency" class="block text-sm font-medium text-gray-700">From:</label>
+                <select id="fromCurrency" name="fromCurrency" required class="mt-1 p-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm rounded-md">
+                    <!-- Options will be populated here -->
+                </select>
+            </div>
+            <div>
+                <label for="toCurrency" class="block text-sm font-medium text-gray-700">To:</label>
+                <select id="toCurrency" name="toCurrency" required class="mt-1 p-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm rounded-md">
+                    <!-- Options will be populated here -->
+                </select>
+            </div>
+            <div>
+                <label for="amount" class="block text-sm font-medium text-gray-700">Amount:</label>
+                <input type="number" id="amount" name="amount" required class="mt-1 p-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm rounded-md">
+            </div>
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Convert</button>
+        </form>
+        <div id="result" class="mt-6 text-center"></div>
+    </div>
+
+    <script>
+        document.getElementById('converterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var fromCurrency = document.getElementById('fromCurrency').value;
+            var toCurrency = document.getElementById('toCurrency').value;
+            var amount = document.getElementById('amount').value;
+
+            fetch(`/convert?from=${fromCurrency}&to=${toCurrency}&amount=${amount}`)
+                .then(response => response.json())
+                .then(data => {
+                    var resultDiv = document.getElementById('result');
+                    if(data.error) {
+                        resultDiv.innerHTML = `<p class="text-red-500">${data.error}</p>`;
+                    } else {
+                        resultDiv.innerHTML = `<p class="text-green-600">Converted Amount: ${data.result} ${toCurrency}</p>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('result').innerHTML = `<p class="text-red-500">Error: ${error}</p>`;
+                });
+        });
+
+        // Fetch the list of currencies on page load
+        fetch('/currencies')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    populateCurrencyOptions(data.currencies);
+                } else {
+                    console.error('Failed to load currency list:', data.error);
+                }
+            })
+            .catch(error => console.error('Error fetching currency list:', error));
+
+        // Function to populate currency options
+        function populateCurrencyOptions(currencies) {
+            const fromCurrencySelect = document.getElementById('fromCurrency');
+            const toCurrencySelect = document.getElementById('toCurrency');
+
+            Object.keys(currencies).forEach(code => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.text = `${code} - ${currencies[code]}`;
+                fromCurrencySelect.appendChild(option.cloneNode(true));
+                toCurrencySelect.appendChild(option);
+            });
+        }
+    </script>
+</body>
+</html>
+
